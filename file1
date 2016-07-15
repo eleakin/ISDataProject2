@@ -1,0 +1,267 @@
+Exploring the BRFSS data
+Setup
+Load packages
+library(ggplot2)
+## Warning: package 'ggplot2' was built under R version 3.3.1
+library(dplyr)
+## Warning: package 'dplyr' was built under R version 3.3.1
+Load data
+load("C:/Users/egbon/Documents/R/brfss2013.RData")
+Part 1: Data
+The Behavioral Risk Factor Surveillance System (BRFSS) is a collaborative project between all of the states in the United States (US) and participating US territories and the Centers for Disease Control and Prevention (CDC). The BRFSS is administered and supported by CDC’s Population Health Surveillance Branch, under the Division of Population Health at the National Center for Chronic Disease Prevention and Health Promotion.
+
+The BRFSS is a project sponsored by the CDC to collect data from the fifty states and territories. The BRFSS collects data from citizens by telephone yearly. The range of questions is fairly diverse and the goal is to collect a minimum of 4,000 interviews per state per year. In the year 2011, about 500,000 were collected. The 2013 dataset contains 330 variables and 491,775 observations. This is a very large data set and the data can be generalized as representative to the general population of the U.S.
+
+BRFSS is an ongoing surveillance system designed to measure behavioral risk factors for the non-institutionalized adult population (18 years of age and older) residing in the US. The BRFSS was initiated in 1984, with 15 states collecting surveillance data on risk behaviors through monthly telephone interviews.
+
+Over time, the number of states participating in the survey increased; by 2001, 50 states, the District of Columbia, Puerto Rico, Guam, and the US Virgin Islands were participating in the BRFSS. Today, all 50 states, the District of Columbia, Puerto Rico, and Guam collect data annually and American Samoa, Federated States of Micronesia, and Palau collect survey data over a limited point- in-time (usually one to three months). In this document, the term “state” is used to refer to all areas participating in BRFSS, including the District of Columbia, Guam, and the Commonwealth of Puerto Rico.
+
+The BRFSS objective is to collect uniform, state-specific data on preventive health practices and risk behaviors that are linked to chronic diseases, injuries, and preventable infectious diseases that affect the adult population. Factors assessed by the BRFSS in 2013 include tobacco use, HIV/AIDS knowledge and prevention, exercise, immunization, health status, healthy days - health-related quality of life, health care access, inadequate sleep, hypertension awareness, cholesterol awareness, chronic health conditions, alcohol consumption, fruits and vegetables consumption, arthritis burden, and seatbelt use. Since 2011, BRFSS conducts both landline telephone- and cellular telephone-based surveys. In conducting the BRFSS landline telephone survey, interviewers collect data from a randomly selected adult in a household. In conducting the cellular telephone version of the BRFSS questionnaire, interviewers collect data from an adult who participates by using a cellular telephone and resides in a private residence or college housing.
+
+Health characteristics estimated from the BRFSS pertain to the non-institutionalized adult population, aged 18 years or older, who reside in the US. In 2013, additional question sets were included as optional modules to provide a measure for several childhood health and wellness indicators, including asthma prevalence for people aged 17 years or younger.
+
+The dataset is provided in both Stata (.dta) and R Workspace (.Rdata) formats. Categorical values are factors in the R workspace, and value labels are attached in the Stata version (except when a categorical variable contains more than 50 categories.
+
+All missing values are coded NA in the R Workspace. For Stata, missing values are coded missing using the following codes: . (numbers) or empty text field: BLANK; .a: Don’t know/Not sure; .b: Refused; .c: Zero (none); .d: Don’t know/Not Sure Or Refused/Missing
+
+Many variables, such as age, race, education, as well as variables that measure counts of events (drinks, times eating fruit, etc.) have alternate versions in the Calculated Variables section of the dataset. Review this section prior to choosing variables for analysis.
+
+Part 2: Research questions
+Research quesion 1:
+
+I will explore from Main Survey - Section 2 - Immunizations and HIV testing:
+
+The variables that will be used are:
+
+tetanus- received a tetanus shot
+
+pneuvac3- received the pneumonia vaccine
+
+hivtst6- person has been tested for AIDS
+
+My research question will be:
+
+What is the distribution of immunizations and HIV testing?
+
+Research quesion 2:
+
+I would like to see if there exists any relation between how many hours one sleeps (SLEPTIM1) and certain health conditions such as Heart Disease(CVDINFR4), and if the patient has ever told their Blood Cholesterol is High (TOLDHI2).
+
+The variables that will be used are:
+
+sleptim1: How Much Time Do You Sleep
+
+cvdinfr4: Ever Diagnosed With Heart Attack
+
+toldhi2: Ever told Blood Cholesterol High
+
+I will:
+
+Run an initial correlation analysis among these variables.
+
+Research quesion 3:
+
+I would like to see if a health condition such as Heart Disease can be predicted using sleep time, Cholesterol, blood pressure etc.
+
+Variables I will be using for that are:
+
+cvdinfr4: Ever Diagnosed With Heart Attack
+
+bloodcho: Ever Had Blood Cholesterol Checked
+
+cholchk: How Long Since Cholesterol Checked
+
+toldhi2: Ever Told Blood Cholesterol High
+
+bphigh4: Ever Told Blood Pressure High
+
+sleptim1: How Much Time Do You Sleep
+
+I will:
+
+Run a basic generalized linear regression analysis among these variables.
+
+Part 3: Exploratory data analysis
+Research quesion 1:
+
+par(mar=c(5, 19, 4, 2))
+plot(brfss2013$tetanus, main= "Tetanus", las = 1, horiz=T)
+
+
+plot(brfss2013$pneuvac3, main= "Pneumonia shot ever", col= rainbow(2))
+
+
+plot(brfss2013$hivtst6, main= "Ever tested HIV ", col= c("green", "red"))
+
+
+Research quesion 2:
+
+# Create a subset of data
+vars <- names(brfss2013) %in% c("sleptim1", "cvdinfr4", "toldhi2")
+subdata <- brfss2013[vars]
+# make a backup
+subdata1 <- subdata
+# conver factor levels into numeric levels
+subdata1$toldhi2 <- ifelse(subdata$toldhi2=="Yes", 1, 0)
+subdata1$cvdinfr4 <- ifelse(subdata$cvdinfr4=="Yes", 1, 0)
+# remove rows containing NAs
+library(Hmisc)
+## Loading required package: lattice
+## Loading required package: survival
+## Loading required package: Formula
+## 
+## Attaching package: 'Hmisc'
+## The following objects are masked from 'package:dplyr':
+## 
+##     combine, src, summarize
+## The following objects are masked from 'package:base':
+## 
+##     format.pval, round.POSIXt, trunc.POSIXt, units
+subdata1 <- na.delete(subdata1)
+# find correlation
+cor(subdata1)
+##              sleptim1     toldhi2     cvdinfr4
+## sleptim1 1.0000000000 0.001743895 0.0001294768
+## toldhi2  0.0017438951 1.000000000 0.1433231819
+## cvdinfr4 0.0001294768 0.143323182 1.0000000000
+library(corrplot)
+## Warning: package 'corrplot' was built under R version 3.3.1
+M <- cor(subdata1)
+corrplot(M, method="ellipse")
+
+
+From the above we can infer that:
+
+There is almost no correlation between sleeptime and having a heartattack and/or having been told you have high cholesterol.
+Research quesion 3:
+
+# Create a subset of data
+vars <- names(brfss2013) %in% c("cvdinfr4", "bloodcho", "toldhi2", "bphigh4", "sleptim1")
+subdata <- brfss2013[vars]
+MissingData <- function(x){sum(is.na(x))/length(x)*100}
+apply(subdata, 2, MissingData)
+##   sleptim1    bphigh4   bloodcho    toldhi2   cvdinfr4 
+##  1.5021097  0.2887499  1.8321387 14.5721112  0.5260536
+summary(subdata$bloodcho)
+##    Yes     No   NA's 
+## 423868  58897   9010
+# Replace NA with "No"s
+subdata$bloodcho <- replace(subdata$bloodcho, which(is.na(subdata$bloodcho)), "No")
+#check replacement
+summary(subdata$bloodcho)
+##    Yes     No 
+## 423868  67907
+summary(subdata$bphigh4)
+##                                        Yes 
+##                                     198921 
+## Yes, but female told only during pregnancy 
+##                                       3680 
+##                                         No 
+##                                     282687 
+##        Told borderline or pre-hypertensive 
+##                                       5067 
+##                                       NA's 
+##                                       1420
+# Replace NA with "No"s
+subdata$bphigh4 <- replace(subdata$bphigh4, which(is.na(subdata$bphigh4)), "No")
+#check replacement
+summary(subdata$bphigh4)
+##                                        Yes 
+##                                     198921 
+## Yes, but female told only during pregnancy 
+##                                       3680 
+##                                         No 
+##                                     284107 
+##        Told borderline or pre-hypertensive 
+##                                       5067
+# Sleep time NA to be replaced with mean of the data
+summary(subdata$sleptim1)
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+##   0.000   6.000   7.000   7.052   8.000 450.000    7387
+mean(subdata$sleptim1,na.rm = T)
+## [1] 7.052099
+subdata$sleptim1 <- replace(subdata$sleptim1, which(is.na(subdata$sleptim1)), 7)
+#check replacement
+summary(subdata$sleptim1)
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##   0.000   6.000   7.000   7.051   8.000 450.000
+summary(subdata$toldhi2)
+##    Yes     No   NA's 
+## 183501 236612  71662
+subdata$toldhi2 <- replace(subdata$toldhi2, which(is.na(subdata$toldhi2)), "No")
+#check replacement
+summary(subdata$toldhi2)
+##    Yes     No 
+## 183501 308274
+summary(subdata$cvdinfr4)
+##    Yes     No   NA's 
+##  29284 459904   2587
+subdata$cvdinfr4 <- replace(subdata$cvdinfr4, which(is.na(subdata$cvdinfr4)), "No")
+#check replacement
+summary(subdata$cvdinfr4)
+##    Yes     No 
+##  29284 462491
+# Make a copy of the data
+subdata1 <- subdata
+# table the data
+table(subdata1$bphigh4)
+## 
+##                                        Yes 
+##                                     198921 
+## Yes, but female told only during pregnancy 
+##                                       3680 
+##                                         No 
+##                                     284107 
+##        Told borderline or pre-hypertensive 
+##                                       5067
+# COnverting factor levels into proper factor levels
+subdata1$bphigh4 <- as.factor(ifelse(subdata1$bphigh4=="Yes", "Yes", 
+                           (ifelse(subdata1$bphigh4=="Yes, but female told only during pregnancy", "Yes",
+                           (ifelse(subdata1$bphigh4=="Told borderline or pre-hypertensive", "Yes",
+                                   "No"))))))
+# table the data
+summary(subdata1$bphigh4)
+##     No    Yes 
+## 284107 207668
+# check class of sub dataset
+class(subdata1)
+## [1] "data.frame"
+# summarize data
+summary(subdata1)
+##     sleptim1       bphigh4      bloodcho     toldhi2      cvdinfr4    
+##  Min.   :  0.000   No :284107   Yes:423868   Yes:183501   Yes: 29284  
+##  1st Qu.:  6.000   Yes:207668   No : 67907   No :308274   No :462491  
+##  Median :  7.000                                                      
+##  Mean   :  7.051                                                      
+##  3rd Qu.:  8.000                                                      
+##  Max.   :450.000
+# Fit the logistic regression
+fit <- glm(cvdinfr4 ~ ., data=subdata1, family = "binomial")
+summary(fit)
+## 
+## Call:
+## glm(formula = cvdinfr4 ~ ., family = "binomial", data = subdata1)
+## 
+## Deviance Residuals: 
+##     Min       1Q   Median       3Q      Max  
+## -2.9987   0.2045   0.2749   0.3702   0.5719  
+## 
+## Coefficients:
+##              Estimate Std. Error z value Pr(>|z|)    
+## (Intercept)  3.031227   0.029578 102.481   <2e-16 ***
+## sleptim1    -0.004202   0.003677  -1.143    0.253    
+## bphigh4Yes  -1.202519   0.014496 -82.957   <2e-16 ***
+## bloodchoNo   0.606773   0.032612  18.606   <2e-16 ***
+## toldhi2No    0.850998   0.013786  61.729   <2e-16 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 222008  on 491774  degrees of freedom
+## Residual deviance: 202329  on 491770  degrees of freedom
+## AIC: 202339
+## 
+## Number of Fisher Scoring iterations: 6
+From the summary we can infer that the model states that sleeping time is insignificant in predicting heart attack conditions while other variables can be significant.
+
